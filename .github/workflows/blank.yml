@@ -3,23 +3,23 @@ name: Node.js CI/CD
 on:
   push:
     branches:
-      - main  # Trigger the action on push to the main branch
+      - main
   pull_request:
     branches:
-      - main  # Trigger on pull requests to the main branch
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out repository
+      - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '14'  # Use Node.js version 14
+          node-version: '14'
 
       - name: Install dependencies
         run: npm install
@@ -33,12 +33,23 @@ jobs:
     if: success()
 
     steps:
-      - name: Check out repository
+      - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Deploy to Heroku
+      - name: Install Heroku CLI
+        run: |
+          curl https://cli-assets.heroku.com/install.sh | sh
+
+      - name: Log in to Heroku
+        run: |
+          echo "machine api.heroku.com" > ~/.netrc
+          echo "  login ${HEROKU_EMAIL}" >> ~/.netrc
+          echo "  password ${HEROKU_API_KEY}" >> ~/.netrc
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          HEROKU_EMAIL: ${{ secrets.HEROKU_EMAIL }}  # Add this email secret
+
+      - name: Deploy to Heroku
         run: |
           git remote add heroku https://git.heroku.com/your-app.git
           git push heroku main
