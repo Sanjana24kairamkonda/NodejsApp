@@ -37,22 +37,30 @@ jobs:
       # Step 2: Set up SSH for Heroku
       - name: Set up SSH for Heroku
         run: |
+          echo "Creating SSH directory"
           mkdir -p ~/.ssh
+          echo "Writing private SSH key to id_rsa"
           echo "$HEROKU_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          echo "Setting permissions for SSH key"
           chmod 600 ~/.ssh/id_rsa
+          echo "Adding Heroku's SSH key to known hosts"
           ssh-keyscan -t rsa git.heroku.com >> ~/.ssh/known_hosts
-          # Verify the contents of the private key
-          cat ~/.ssh/id_rsa
-          # Check the permissions
+          echo "Checking SSH directory contents"
           ls -l ~/.ssh
+          echo "Checking the private key"
+          cat ~/.ssh/id_rsa
+          echo "Verifying SSH connectivity"
+          ssh -T git@heroku.com || true  # Don't fail the action if this fails, just for debugging
         env:
           HEROKU_SSH_PRIVATE_KEY: ${{ secrets.HEROKU_SSH_PRIVATE_KEY }}
 
+      # Step 3: Add Heroku remote with SSH
       - name: Add Heroku remote with SSH
         run: git remote set-url heroku git@heroku.com:$HEROKU_APP_NAME.git
         env:
           HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
 
+      # Step 4: Push to Heroku
       - name: Push to Heroku
         run: git push heroku main
         env:
