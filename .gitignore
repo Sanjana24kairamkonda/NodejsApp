@@ -1,0 +1,35 @@
+# Node.js dependencies
+/node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+
+# Build directories
+/dist
+/build
+
+# Dependency directories
+/pnpm-debug.log
+/package-lock.json
+/package-lock.json.*
+
+# Mac-specific files
+.DS_Store
+
+# VSCode settings
+.vscode/
+
+# IDE configuration files (e.g., IntelliJ, WebStorm, etc.)
+.idea/
+
+# Heroku-specific
+.heroku/
+
+# Test coverage
+/coverage/
+
