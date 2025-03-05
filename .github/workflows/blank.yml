@@ -34,7 +34,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Step 2: Set up SSH for Heroku with debugging
+      # Set up SSH for Heroku with retry mechanism
       - name: Set up SSH for Heroku
         run: |
           echo "Creating SSH directory"
@@ -58,9 +58,12 @@ jobs:
           echo "Checking the private key"
           cat ~/.ssh/id_rsa || { echo "Failed to display SSH private key"; exit 1; }
 
-          # Debug: Run ssh-keyscan with verbose output to add Heroku's key to known_hosts
-          echo "Adding Heroku's SSH key to known hosts with verbose output"
-          ssh-keyscan -t rsa git.heroku.com -v >> ~/.ssh/known_hosts || { echo "Failed to add Heroku's SSH key"; exit 1; }
+          # Retry mechanism for ssh-keyscan with full DNS name
+          echo "Adding Heroku's SSH key to known hosts with retry"
+          for i in {1..3}; do
+            echo "Attempt $i of 3"
+            ssh-keyscan -t rsa git.heroku.com -v >> ~/.ssh/known_hosts && break || sleep 5
+          done || { echo "Failed to add Heroku's SSH key after 3 attempts"; exit 1; }
 
           # Debug: Check known_hosts contents
           echo "Checking the known_hosts file"
