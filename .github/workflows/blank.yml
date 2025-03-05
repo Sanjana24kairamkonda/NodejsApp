@@ -34,23 +34,40 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Step 2: Set up SSH for Heroku
+      # Step 2: Set up SSH for Heroku with debugging
       - name: Set up SSH for Heroku
         run: |
           echo "Creating SSH directory"
-          mkdir -p ~/.ssh
+          mkdir -p ~/.ssh || { echo "Failed to create SSH directory"; exit 1; }
+          
           echo "Writing private SSH key to id_rsa"
-          echo "$HEROKU_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          echo "$HEROKU_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa || { echo "Failed to write SSH key to file"; exit 1; }
+          
           echo "Setting permissions for SSH key"
-          chmod 600 ~/.ssh/id_rsa
-          echo "Adding Heroku's SSH key to known hosts"
-          ssh-keyscan -t rsa git.heroku.com >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_rsa || { echo "Failed to set permissions for SSH key"; exit 1; }
+
+          # Ensure known_hosts exists and create it if it doesn't
+          echo "Ensuring known_hosts file exists"
+          touch ~/.ssh/known_hosts || { echo "Failed to create known_hosts file"; exit 1; }
+
+          # Debug: Check the SSH directory contents
           echo "Checking SSH directory contents"
-          ls -l ~/.ssh
+          ls -l ~/.ssh || { echo "Failed to list SSH directory contents"; exit 1; }
+          
+          # Debug: Check the private key
           echo "Checking the private key"
-          cat ~/.ssh/id_rsa
+          cat ~/.ssh/id_rsa || { echo "Failed to display SSH private key"; exit 1; }
+
+          # Debug: Run ssh-keyscan with verbose output to add Heroku's key to known_hosts
+          echo "Adding Heroku's SSH key to known hosts with verbose output"
+          ssh-keyscan -t rsa git.heroku.com -v >> ~/.ssh/known_hosts || { echo "Failed to add Heroku's SSH key"; exit 1; }
+
+          # Debug: Check known_hosts contents
+          echo "Checking the known_hosts file"
+          cat ~/.ssh/known_hosts || { echo "Failed to display known_hosts file"; exit 1; }
+
           echo "Verifying SSH connectivity"
-          ssh -T git@heroku.com || true  # Don't fail the action if this fails, just for debugging
+          ssh -T git@heroku.com || { echo "SSH connectivity check failed"; exit 1; }
         env:
           HEROKU_SSH_PRIVATE_KEY: ${{ secrets.HEROKU_SSH_PRIVATE_KEY }}
 
